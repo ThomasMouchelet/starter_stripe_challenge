@@ -56,6 +56,87 @@ L'application est accessible sur [http://localhost:3000](http://localhost:3000).
 | `npm run dev` | Serveur de développement |
 | `npm run build` | Build de production |
 
+## Stripe
+
+Le projet utilise [Stripe](https://stripe.com) pour la gestion des paiements et des abonnements. En développement local, la [Stripe CLI](https://docs.stripe.com/stripe-cli) est nécessaire pour tester le checkout et recevoir les webhooks.
+
+### 1. Installer la Stripe CLI
+
+```bash
+# macOS
+brew install stripe/stripe-cli/stripe
+
+# Autres plateformes : https://docs.stripe.com/stripe-cli#install
+```
+
+Vérifier l'installation :
+
+```bash
+stripe --version
+```
+
+### 2. Se connecter à son compte Stripe
+
+```bash
+stripe login
+```
+
+Une page s'ouvre dans le navigateur pour autoriser la CLI à accéder au compte Stripe (mode test).
+
+### 3. Récupérer les clés d'API
+
+Dans le [dashboard Stripe](https://dashboard.stripe.com/test/apikeys) (mode **test**), copier :
+
+- `STRIPE_SECRET_KEY` → clé secrète (`sk_test_...`)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → clé publique (`pk_test_...`)
+
+Les ajouter au fichier `.env` à la racine du projet.
+
+### 4. Écouter les webhooks en local
+
+Dans un terminal dédié, lancer :
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+La CLI affiche alors un **webhook signing secret** (`whsec_...`) à copier dans `.env` sous la variable `STRIPE_WEBHOOK_SECRET`. Laisser la commande tourner pendant toute la session de développement.
+
+### 5. Déclencher des événements de test
+
+Dans un autre terminal, on peut simuler des événements Stripe sans passer par l'UI :
+
+```bash
+stripe trigger checkout.session.completed
+stripe trigger customer.subscription.created
+stripe trigger customer.subscription.updated
+stripe trigger customer.subscription.deleted
+stripe trigger invoice.payment_succeeded
+```
+
+### 6. Cartes de test
+
+Pour tester un paiement dans l'application, utiliser les [cartes de test Stripe](https://docs.stripe.com/testing#cards) :
+
+| Carte | Comportement |
+|---|---|
+| `4242 4242 4242 4242` | Paiement accepté |
+| `4000 0025 0000 3155` | Nécessite une authentification 3DS |
+| `4000 0000 0000 9995` | Paiement refusé (fonds insuffisants) |
+
+Date d'expiration : n'importe quelle date future. CVC : n'importe quel nombre à 3 chiffres.
+
+### Commandes Stripe utiles
+
+| Commande | Description |
+|---|---|
+| `stripe login` | Authentification de la CLI avec le compte Stripe |
+| `stripe logout` | Déconnexion de la CLI |
+| `stripe listen --forward-to localhost:3000/api/stripe/webhook` | Forward des webhooks vers l'app locale |
+| `stripe trigger <event>` | Déclencher un événement de test |
+| `stripe events resend <event_id>` | Rejouer un événement déjà reçu |
+| `stripe logs tail` | Suivre les logs d'API en temps réel |
+
 ## TODO — Évolution des abonnements
 
 Actuellement, l'application propose un seul abonnement. L'objectif est de passer à **deux plans** (`Premium` et `Max`), chacun disponible en **mensuel** ou **annuel** (soit 4 prix au total).
