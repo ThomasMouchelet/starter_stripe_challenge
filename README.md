@@ -42,19 +42,23 @@ npx prisma generate
 npm run dev
 ```
 
+```stripe
+$ENV:Path = "C:\Users\lalan\Desktop\stripe"
+```
+
 L'application est accessible sur [http://localhost:3000](http://localhost:3000).
 
 ## Commandes utiles
 
-| Commande | Description |
-|---|---|
-| `docker compose up -d` | Démarrer PostgreSQL + Adminer |
-| `docker compose down` | Arrêter les conteneurs |
-| `npx prisma db push` | Synchroniser le schéma avec la BDD |
-| `npx prisma generate` | Régénérer le client Prisma |
-| `npx prisma studio` | Interface visuelle Prisma |
-| `npm run dev` | Serveur de développement |
-| `npm run build` | Build de production |
+| Commande               | Description                        |
+| ---------------------- | ---------------------------------- |
+| `docker compose up -d` | Démarrer PostgreSQL + Adminer      |
+| `docker compose down`  | Arrêter les conteneurs             |
+| `npx prisma db push`   | Synchroniser le schéma avec la BDD |
+| `npx prisma generate`  | Régénérer le client Prisma         |
+| `npx prisma studio`    | Interface visuelle Prisma          |
+| `npm run dev`          | Serveur de développement           |
+| `npm run build`        | Build de production                |
 
 ## Stripe
 
@@ -118,24 +122,24 @@ stripe trigger invoice.payment_succeeded
 
 Pour tester un paiement dans l'application, utiliser les [cartes de test Stripe](https://docs.stripe.com/testing#cards) :
 
-| Carte | Comportement |
-|---|---|
-| `4242 4242 4242 4242` | Paiement accepté |
-| `4000 0025 0000 3155` | Nécessite une authentification 3DS |
+| Carte                 | Comportement                         |
+| --------------------- | ------------------------------------ |
+| `4242 4242 4242 4242` | Paiement accepté                     |
+| `4000 0025 0000 3155` | Nécessite une authentification 3DS   |
 | `4000 0000 0000 9995` | Paiement refusé (fonds insuffisants) |
 
 Date d'expiration : n'importe quelle date future. CVC : n'importe quel nombre à 3 chiffres.
 
 ### Commandes Stripe utiles
 
-| Commande | Description |
-|---|---|
-| `stripe login` | Authentification de la CLI avec le compte Stripe |
-| `stripe logout` | Déconnexion de la CLI |
-| `stripe listen --forward-to localhost:3000/api/stripe/webhook` | Forward des webhooks vers l'app locale |
-| `stripe trigger <event>` | Déclencher un événement de test |
-| `stripe events resend <event_id>` | Rejouer un événement déjà reçu |
-| `stripe logs tail` | Suivre les logs d'API en temps réel |
+| Commande                                                       | Description                                      |
+| -------------------------------------------------------------- | ------------------------------------------------ |
+| `stripe login`                                                 | Authentification de la CLI avec le compte Stripe |
+| `stripe logout`                                                | Déconnexion de la CLI                            |
+| `stripe listen --forward-to localhost:3000/api/stripe/webhook` | Forward des webhooks vers l'app locale           |
+| `stripe trigger <event>`                                       | Déclencher un événement de test                  |
+| `stripe events resend <event_id>`                              | Rejouer un événement déjà reçu                   |
+| `stripe logs tail`                                             | Suivre les logs d'API en temps réel              |
 
 ## TODO — Évolution des abonnements
 
@@ -144,28 +148,28 @@ Actuellement, l'application propose un seul abonnement. L'objectif est de passer
 ### Issues à intégrer
 
 - [ ] **#1 — Stripe : créer les produits et prix**
-  Créer 2 produits (`Premium`, `Max`) avec chacun 2 prix récurrents (mensuel + annuel). Récupérer les `price_id` et les exposer via les variables d'environnement.
+      Créer 2 produits (`Premium`, `Max`) avec chacun 2 prix récurrents (mensuel + annuel). Récupérer les `price_id` et les exposer via les variables d'environnement.
 
 - [ ] **#2 — Back : adapter le modèle de données**
-  Mettre à jour le schéma Prisma pour stocker le plan (`PREMIUM` / `MAX`) et la période (`MONTHLY` / `YEARLY`) de l'utilisateur abonné. Migration à prévoir.
+      Mettre à jour le schéma Prisma pour stocker le plan (`PREMIUM` / `MAX`) et la période (`MONTHLY` / `YEARLY`) de l'utilisateur abonné. Migration à prévoir.
 
 - [ ] **#3 — Back : mise à jour du checkout**
-  Modifier la route de création de session Stripe Checkout pour accepter un `priceId` dynamique (en fonction du plan et de la période choisis par l'utilisateur).
+      Modifier la route de création de session Stripe Checkout pour accepter un `priceId` dynamique (en fonction du plan et de la période choisis par l'utilisateur).
 
 - [ ] **#4 — Back : gestion du webhook Stripe**
-  Adapter le handler webhook pour identifier le plan et la période à partir du `priceId` reçu, et mettre à jour l'utilisateur en base en conséquence.
+      Adapter le handler webhook pour identifier le plan et la période à partir du `priceId` reçu, et mettre à jour l'utilisateur en base en conséquence.
 
 - [ ] **#5 — Back : changement de plan (upgrade / downgrade)**
-  Ajouter une route permettant à un utilisateur déjà abonné de changer de plan ou de période via l'API Stripe (`subscription.update`).
+      Ajouter une route permettant à un utilisateur déjà abonné de changer de plan ou de période via l'API Stripe (`subscription.update`).
 
 - [ ] **#6 — Front : page de pricing**
-  Créer une page `/pricing` affichant les deux plans côte à côte, avec un toggle mensuel / annuel, la liste des fonctionnalités et un CTA d'abonnement par plan.
+      Créer une page `/pricing` affichant les deux plans côte à côte, avec un toggle mensuel / annuel, la liste des fonctionnalités et un CTA d'abonnement par plan.
 
 - [ ] **#7 — Front : page de gestion de l'abonnement**
-  Afficher le plan actuel de l'utilisateur, permettre de changer de plan / période, et donner accès au portail client Stripe.
+      Afficher le plan actuel de l'utilisateur, permettre de changer de plan / période, et donner accès au portail client Stripe.
 
 - [ ] **#8 — Front : protection d'accès par plan**
-  Mettre en place un garde côté front (et vérif côté back) pour restreindre certaines fonctionnalités aux utilisateurs `Max` uniquement.
+      Mettre en place un garde côté front (et vérif côté back) pour restreindre certaines fonctionnalités aux utilisateurs `Max` uniquement.
 
 - [ ] **#9 — Tests & QA**
-  Tester le parcours complet avec les cartes de test Stripe : souscription Premium/Max mensuel/annuel, upgrade, downgrade, annulation, réception des webhooks.
+      Tester le parcours complet avec les cartes de test Stripe : souscription Premium/Max mensuel/annuel, upgrade, downgrade, annulation, réception des webhooks.
